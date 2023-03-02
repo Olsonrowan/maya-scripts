@@ -4,7 +4,6 @@ import functools
 saved_poses = {}
 
 def save_pose(*args):
-    # Get selected object
     selected_obj = cmds.ls(sl=True)
 
     if not selected_obj:
