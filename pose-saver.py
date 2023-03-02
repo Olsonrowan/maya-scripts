@@ -1,7 +1,6 @@
 import maya.cmds as cmds
 import functools
 
-# Dictionary to store saved poses
 saved_poses = {}
 
 def save_pose(*args):
@@ -12,7 +11,6 @@ def save_pose(*args):
         cmds.warning("Please select an object to save pose.")
         return
 
-    # Get pose name
     result = cmds.promptDialog(title="Save Pose", message="Enter pose name:", button=["Save", "Cancel"],
                                   defaultButton="Save", cancelButton="Cancel", dismissString="Cancel")
     if result == "Cancel":
@@ -21,48 +19,38 @@ def save_pose(*args):
     pose_name = cmds.promptDialog(query=True, text=True)
     cmds.separator(height=10)
 
-    # Get pose data
     pose_data = {}
     for axis in ["x", "y", "z"]:
         for xform in ["t", "r", "s"]:
             attr = f"{selected_obj[0]}.{xform}{axis}"
             pose_data[attr] = cmds.getAttr(attr)
 
-    # Add saved pose to dictionary
     saved_poses[pose_name] = pose_data
 
-    # Add button for saved pose
     restore_fn = functools.partial(restore_pose, pose_data)
     cmds.button(label=pose_name, command=restore_fn, parent=pose_layout)
 
 def restore_pose(saved_poses, *args):
-    # Get selected object
     selected_obj = cmds.ls(sl=True)
 
     if not selected_obj:
         cmds.warning("Please select an object to restore pose.")
         return
-    print('here')
 
-    print(saved_poses)
-    # Get pose data for selected pose name
     pose_data = saved_poses
     if not pose_data:
         cmds.warning(f"No pose found with name '{saved_poses}'.")
         return
 
-    # Restore pose
     for attr, value in pose_data.items():
         cmds.setAttr(attr, value)
 
 
-# Create window
 if cmds.window("poseWindow", exists=True):
     cmds.deleteUI("poseWindow")
 
 cmds.window("poseWindow", title="Pose")
 
-# Create layout for saving poses
 pose_layout = cmds.columnLayout(adj=True)
 
 cmds.text(label="Select an object and enter a name for the pose to save, or click a saved pose button to restore it.")
