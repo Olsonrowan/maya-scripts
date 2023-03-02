@@ -1,22 +1,73 @@
-from maya import cmds
+import maya.cmds as cmds
+import functools
 
-axis = ["x", "y", "z"]
-xform = ["t", "r", "s"]
+# Dictionary to store saved poses
+saved_poses = {}
 
-for ax in axis:
-	for xf in xform:
-		print(xf, ax)
+def save_pose(*args):
+    # Get selected object
+    selected_obj = cmds.ls(sl=True)
 
-if cmds.getAttr(f'{cmds.ls(sl=1)[0]}.sx', lock=True):
-	print('Its locked')
-else:
-	print('Unlocked')
+    if not selected_obj:
+        cmds.warning("Please select an object to save pose.")
+        return
 
-selectedObj = cmds.ls(sl=True)
+    # Get pose name
+    result = cmds.promptDialog(title="Save Pose", message="Enter pose name:", button=["Save", "Cancel"],
+                                  defaultButton="Save", cancelButton="Cancel", dismissString="Cancel")
+    if result == "Cancel":
+        return
 
-attrVal = cmds.getAttr(f'{selectedObj[0]}.rx')
+    pose_name = cmds.promptDialog(query=True, text=True)
+    cmds.separator(height=10)
 
-cmds.setAttr(f'{selectedObj[0]}.rx', attrVal)
+    # Get pose data
+    pose_data = {}
+    for axis in ["x", "y", "z"]:
+        for xform in ["t", "r", "s"]:
+            attr = f"{selected_obj[0]}.{xform}{axis}"
+            pose_data[attr] = cmds.getAttr(attr)
 
-cmds.select('ControlSet')
-ctrlList = cmds.ls(sl=True)
+    # Add saved pose to dictionary
+    saved_poses[pose_name] = pose_data
+
+    # Add button for saved pose
+    restore_fn = functools.partial(restore_pose, pose_data)
+    cmds.button(label=pose_name, command=restore_fn, parent=pose_layout)
+
+def restore_pose(saved_poses, *args):
+    # Get selected object
+    selected_obj = cmds.ls(sl=True)
+
+    if not selected_obj:
+        cmds.warning("Please select an object to restore pose.")
+        return
+    print('here')
+
+    print(saved_poses)
+    # Get pose data for selected pose name
+    pose_data = saved_poses
+    if not pose_data:
+        cmds.warning(f"No pose found with name '{saved_poses}'.")
+        return
+
+    # Restore pose
+    for attr, value in pose_data.items():
+        cmds.setAttr(attr, value)
+
+
+# Create window
+if cmds.window("poseWindow", exists=True):
+    cmds.deleteUI("poseWindow")
+
+cmds.window("poseWindow", title="Pose")
+
+# Create layout for saving poses
+pose_layout = cmds.columnLayout(adj=True)
+
+cmds.text(label="Select an object and enter a name for the pose to save, or click a saved pose button to restore it.")
+cmds.separator(height=10)
+cmds.button(label="Save Pose", command=save_pose)
+cmds.separator(height=10)
+
+cmds.showWindow("poseWindow")
