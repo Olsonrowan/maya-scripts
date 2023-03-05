@@ -1,41 +1,46 @@
 from maya import cmds
 
-def createGear(teeth=10, length=0.3):
-    """
-    This function will create a gear with the given paramaeters
-    Args:
-        teeth: The number of teeth to create
-        length: The length of teeth
-    Returns:
-    A tuple of the transform, constructor and extrude node
-    """
-    spans = teeth * 2
+class gearClass(object):
 
-    transform, constructor = cmds.polyPipe(subdivisionsAxis=spans)
+    def __int__(self):
+        self.constructor = None
+        self.transform = None
+        self.extrude = None
 
-    sideFaces = range(spans*2, spans*3, 2)
+    def createGear(self, teeth=10, length=0.3):
+        """
+        This function will create a gear with the given paramaeters
+        Args:
+            teeth: The number of teeth to create
+            length: The length of teeth
+        Returns:
+        A tuple of the transform, constructor and extrude node
+        """
+        spans = teeth * 2
 
-    cmds.select(clear=True)
+        self.transform, self.constructor = cmds.polyPipe(subdivisionsAxis=spans)
 
-    for face in sideFaces:
-        cmds.select('%s.f[%s]' % (transform, face), add=True)
+        sideFaces = range(spans*2, spans*3, 2)
 
-    extrude = cmds.polyExtrudeFacet(localTranslateZ=length)[0]
-    return transform, constructor, extrude
+        cmds.select(clear=True)
 
-transform, constructor, extrude = createGear()
+        for face in sideFaces:
+            cmds.select('%s.f[%s]' % (self.transform, face), add=True)
 
-def changeTeeth(constructor, extrude, teeth=10, length=0.3):
-    spans = teeth * 2
-    cmds.polyPipe(constructor, edit=True,
-                  subdivisionsAxis=spans)
-    sideFaces = range(spans*2, spans*3, 2)
+        self.extrude = cmds.polyExtrudeFacet(localTranslateZ=length)[0]
 
-    faceNames = []
 
-    for face in sideFaces:
-        faceName = 'f[%s]' % (face)
-        faceNames.append(faceName)
-    cmds.setAttr('%s.inputComponents' % (extrude), len(faceNames),
-                 *faceNames, type="componentList")
-    cmds.polyExtrudeFacet(extrude, edit=True, ltz=length)
+    def changeTeeth(self, teeth=10, length=0.3):
+        spans = teeth * 2
+        cmds.polyPipe(self.constructor, edit=True,
+                      subdivisionsAxis=spans)
+        sideFaces = range(spans*2, spans*3, 2)
+
+        faceNames = []
+
+        for face in sideFaces:
+            faceName = 'f[%s]' % (face)
+            faceNames.append(faceName)
+        cmds.setAttr('%s.inputComponents' % (self.extrude), len(faceNames),
+                     *faceNames, type="componentList")
+        cmds.polyExtrudeFacet(self.extrude, edit=True, ltz=length)
