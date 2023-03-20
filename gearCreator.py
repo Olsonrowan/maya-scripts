@@ -1,6 +1,6 @@
 from maya import cmds
 
-class gearClass(object):
+class Gear(object):
 
     def __int__(self):
         self.constructor = None
